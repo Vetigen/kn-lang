@@ -1,0 +1,15 @@
+{
+  "owner": {
+    "name": "Vetigen",
+    "homepage": "https://vetigen.com"
+  },
+  "plugins": [
+    {
+      "name": "kn-lang",
+      "source": ".",
+      "description": "Knowledge Notation toolchain — authoring, exploration, and validation skills for .kn files",
+      "version": "0.1.0",
+      "homepage": "https://github.com/Vetigen/kn-lang"
+    }
+  ]
+}

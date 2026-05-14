@@ -1,0 +1,12 @@
+{
+  "name": "kn-lang",
+  "version": "0.1.0",
+  "description": "Knowledge Notation toolchain — skills and agents for authoring, exploring, and validating typed knowledge atoms (.kn files)",
+  "author": {
+    "name": "Vetigen",
+    "email": "hello@vetigen.com"
+  },
+  "homepage": "https://github.com/Vetigen/kn-lang",
+  "repository": "https://github.com/Vetigen/kn-lang",
+  "license": "MIT"
+}

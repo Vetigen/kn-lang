@@ -33,6 +33,25 @@ kn search "refresh"            # regex match across paths and field values
 kn manifest                    # full corpus summary (JSON, AI session payload)
 ```
 
+## Claude Code Plugin
+
+`kn-lang` ships with a Claude Code plugin (skills + agent) for authoring, exploring, and validating `.kn` files inside Claude Code.
+
+```bash
+# Inside Claude Code:
+/plugin marketplace add Vetigen/kn-lang
+/plugin install kn-lang@kn-lang
+```
+
+The plugin provides:
+
+- **`/kn-lang:kn-author`** — guides you through writing a new atom
+- **`/kn-lang:kn-explore`** — loads the corpus map (`kn manifest`, `kn ls`, `kn tree`) at session start
+- **`/kn-lang:kn-validate`** — runs `knc check --strict` and explains diagnostics
+- **`kn-author` agent** — automated atom extraction from a code directory
+
+The plugin assumes `knc` and `kn` are on PATH (`npm install -g kn-lang` or standalone binary).
+
 ## Why
 
 Markdown is great for humans, costly for AI. Every CLAUDE.md, KNOWLEDGE.md, and ARCHITECTURE.md asks the model to scan thousands of tokens to answer one question.

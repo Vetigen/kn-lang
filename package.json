@@ -1,13 +1,18 @@
 {
   "name": "kn-lang",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Knowledge Notation — typed knowledge format for AI assistants",
   "type": "module",
   "bin": {
     "knc": "./bin/knc",
     "kn": "./bin/kn"
   },
-  "files": ["bin", "dist", "README.md", "LICENSE"],
+  "files": [
+    "bin",
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "dev:knc": "bun src/cli-knc.ts",
     "dev:kn": "bun src/cli-kn.ts",
@@ -25,7 +30,13 @@
     "url": "https://github.com/Vetigen/kn-lang.git"
   },
   "homepage": "https://github.com/Vetigen/kn-lang",
-  "keywords": ["knowledge", "documentation", "ai", "llm", "dsl"],
+  "keywords": [
+    "knowledge",
+    "documentation",
+    "ai",
+    "llm",
+    "dsl"
+  ],
   "dependencies": {
     "chalk": "^5.6.2",
     "chevrotain": "^12.0.0",
