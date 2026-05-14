@@ -46,3 +46,23 @@ test('clean input — no diagnostics', () => {
   const diags = runChecks(reg)
   expect(diags.filter(d => d.severity === 'error')).toHaveLength(0)
 })
+
+test('KN4001 — missing required field (type)', () => {
+  const reg = buildRegistry(['@a/x { name: "no type field" }', 'a.kn'])
+  const diags = runChecks(reg)
+  const missing = diags.find(d => d.code === 'KN4001')
+  expect(missing).toBeDefined()
+})
+
+test('KN3001/3002 — freshness warnings and errors', () => {
+  const oldDate = new Date(Date.now() - 200 * 86400 * 1000).toISOString().slice(0, 10)
+  const reg = buildRegistry([`@a/x { type: flow, freshness: "${oldDate}" }`, 'a.kn'])
+  const diags = runChecks(reg, { freshness: { warnAfterDays: 90, errorAfterDays: 365 } })
+  expect(diags.find(d => d.code === 'KN3001')).toBeDefined()
+})
+
+test('KN2004 — unknown type used as typeref', () => {
+  const reg = buildRegistry(['@a/x { type: flow, id: NotAKnownType() }', 'a.kn'])
+  const diags = runChecks(reg)
+  expect(diags.find(d => d.code === 'KN2004')).toBeDefined()
+})
