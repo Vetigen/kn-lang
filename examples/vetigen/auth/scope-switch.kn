@@ -1,9 +1,0 @@
-@auth/scope-switch {
-  type: flow,
-  entry: "POST /auth/switch-scope",
-  source: "src/core/auth/services/auth.service.ts",
-  freshness: "2026-05-14"
-}
-
-@auth/scope-switch -revokes-> @auth/session
-@auth/scope-switch -uses-> @auth/security-layers

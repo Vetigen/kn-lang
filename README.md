@@ -10,7 +10,7 @@ Stop making AI read 500 lines of Markdown to understand one thing.
 bun install -g kn-lang
 ```
 
-Or download standalone binaries from [Releases](https://github.com/kn-lang/kn/releases).
+Or download standalone binaries from [Releases](https://github.com/Vetigen/kn-lang/releases).
 
 ## Quick Start
 

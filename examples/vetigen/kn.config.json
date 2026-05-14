@@ -1,4 +1,0 @@
-{
-  "include": ["auth/**/*.kn"],
-  "outDir": ".kn-dist"
-}

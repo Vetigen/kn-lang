@@ -22,9 +22,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kn-lang/kn.git"
+    "url": "https://github.com/Vetigen/kn-lang.git"
   },
-  "homepage": "https://github.com/kn-lang/kn",
+  "homepage": "https://github.com/Vetigen/kn-lang",
   "keywords": ["knowledge", "documentation", "ai", "llm", "dsl"],
   "dependencies": {
     "chalk": "^5.6.2",

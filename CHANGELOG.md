@@ -11,4 +11,3 @@
 - `kn` discovery CLI: ls, tree, search, manifest
 - TypeScript-style error formatter (KN#### codes)
 - JSON dist output
-- Vetigen auth module examples

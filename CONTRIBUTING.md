@@ -5,8 +5,8 @@ Thanks for your interest!
 ## Development
 
 ```bash
-git clone https://github.com/kn-lang/kn.git
-cd kn
+git clone https://github.com/Vetigen/kn-lang.git
+cd kn-lang
 bun install
 bun test
 ```
@@ -26,7 +26,7 @@ Every change has a test. Write the failing test first, then the implementation. 
 
 1. Fork, branch from `main`
 2. `bun test` and `bun run typecheck` pass
-3. `bun src/cli-knc.ts check --strict --cwd examples/vetigen` passes
+3. `bun test` covers your change
 4. Conventional commits (`feat:`, `fix:`, `chore:`)
 5. Reference an issue or open one first for significant changes
 
