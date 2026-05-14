@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { Command } from 'commander'
 import { mkdir } from 'node:fs/promises'
+import { watch } from 'node:fs'
 import { compile, runPipeline } from './compiler/index.ts'
 import { loadConfig, DEFAULT_CONFIG } from './config/index.ts'
 import { formatDiagnostic, summary } from './errors/index.ts'
@@ -154,6 +155,41 @@ program
     const warnCount = result.diagnostics.filter(d => d.severity === 'warning').length
     const failOn = opts.strict ? errCount + warnCount : errCount
     process.exit(failOn > 0 ? 1 : 0)
+  })
+
+program
+  .command('watch')
+  .option('--cwd <dir>', 'working directory', process.cwd())
+  .action(async (opts) => {
+    process.chdir(opts.cwd)
+    const cfg = await loadConfig()
+
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const trigger = () => {
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(async () => {
+        console.log('▶ knc watch — rebuilding...')
+        const result = await compile({
+          include: cfg.include,
+          exclude: cfg.exclude,
+          outDir: cfg.outDir,
+          freshness: cfg.freshness,
+        })
+        for (const d of result.diagnostics) process.stderr.write(formatDiagnostic(d))
+        process.stderr.write(summary(result.diagnostics) + '\n')
+      }, 100)
+    }
+
+    trigger()  // initial build
+
+    const watcher = watch('.', { recursive: true }, (_e, path) => {
+      if (path?.endsWith('.kn')) trigger()
+    })
+
+    process.on('SIGTERM', () => { watcher.close(); process.exit(0) })
+    process.on('SIGINT', () => { watcher.close(); process.exit(0) })
+
+    await new Promise(() => {})
   })
 
 program.parseAsync(Bun.argv).catch(e => {
