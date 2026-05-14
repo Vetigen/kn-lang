@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test'
 import { parseSource } from '../../src/parser/index.ts'
-import { isAtom } from '../../src/ast/types.ts'
+import { isAtom, isEdge } from '../../src/ast/types.ts'
 
 test('parses empty atom', () => {
   const result = parseSource('@auth/login { }', 'test.kn')
@@ -100,4 +100,26 @@ test('parses typeref with args', () => {
     expect(v.name).toBe('fp')
     expect(v.args).toEqual(['user_'])
   }
+})
+
+test('parses simple edge', () => {
+  const result = parseSource('@a/login -uses-> @b/cache', 'test.kn')
+  expect(result.errors).toHaveLength(0)
+  const node = result.file.nodes[0]!
+  expect(isEdge(node)).toBe(true)
+  if (isEdge(node)) {
+    expect(node.from).toBe('@a/login')
+    expect(node.edgeType).toBe('uses')
+    expect(node.to).toBe('@b/cache')
+    expect(node.isGlob).toBe(false)
+  }
+})
+
+test('parses edge with glob target', () => {
+  const result = parseSource('@auth/login -invalidates-> @cache/*', 'test.kn')
+  expect(result.errors).toHaveLength(0)
+  const node = result.file.nodes[0]!
+  if (!isEdge(node)) throw new Error('expected edge')
+  expect(node.to).toBe('@cache')
+  expect(node.isGlob).toBe(true)
 })

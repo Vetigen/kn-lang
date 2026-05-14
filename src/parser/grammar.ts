@@ -3,6 +3,7 @@ import {
   allTokens, At, ModuleKw, LBrace, RBrace, Slash, Identifier,
   Colon, Comma, StringLiteral, NumberLiteral, True, False,
   LBracket, RBracket, LParen, RParen, RefKw,
+  Dash, Arrow, Star,
 } from './tokens.ts'
 
 export class KnParser extends CstParser {
@@ -15,7 +16,7 @@ export class KnParser extends CstParser {
     this.MANY(() => {
       this.OR([
         { ALT: () => this.SUBRULE(this.moduleDecl) },
-        { ALT: () => this.SUBRULE(this.atomDecl) },
+        { ALT: () => this.SUBRULE(this.atomOrEdgeDecl) },
       ])
     })
   })
@@ -32,9 +33,16 @@ export class KnParser extends CstParser {
     this.CONSUME(RBrace)
   })
 
-  public atomDecl = this.RULE('atomDecl', () => {
+  public atomOrEdgeDecl = this.RULE('atomOrEdgeDecl', () => {
     this.CONSUME(At)
     this.SUBRULE(this.atomPath)
+    this.OR([
+      { ALT: () => this.SUBRULE(this.atomBody) },
+      { ALT: () => this.SUBRULE(this.edgeTail) },
+    ])
+  })
+
+  public atomBody = this.RULE('atomBody', () => {
     this.CONSUME(LBrace)
     this.MANY_SEP({
       SEP: Comma,
@@ -43,11 +51,26 @@ export class KnParser extends CstParser {
     this.CONSUME(RBrace)
   })
 
+  public edgeTail = this.RULE('edgeTail', () => {
+    this.CONSUME(Dash)
+    this.CONSUME(Identifier)
+    this.CONSUME(Arrow)
+    this.CONSUME2(At)
+    this.SUBRULE(this.atomPath)
+    this.OPTION(() => {
+      this.CONSUME(Slash)
+      this.CONSUME(Star)
+    })
+  })
+
   public atomPath = this.RULE('atomPath', () => {
     this.CONSUME(Identifier)
-    this.MANY(() => {
-      this.CONSUME(Slash)
-      this.CONSUME2(Identifier)
+    this.MANY({
+      GATE: () => this.LA(1).tokenType === Slash && this.LA(2).tokenType === Identifier,
+      DEF: () => {
+        this.CONSUME(Slash)
+        this.CONSUME2(Identifier)
+      },
     })
   })
 

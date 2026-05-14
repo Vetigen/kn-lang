@@ -1,16 +1,21 @@
 import type { CstNode, IToken } from 'chevrotain'
-import type { FileNode, TopLevelNode, AtomNode, ModuleNode, ValueNode } from '../ast/types.ts'
+import type { FileNode, TopLevelNode, AtomNode, ModuleNode, EdgeNode, ValueNode } from '../ast/types.ts'
 import { sourceLocationFromToken } from '../ast/source-location.ts'
 
 export function buildFile(cst: CstNode, filePath: string): FileNode {
   const nodes: TopLevelNode[] = []
-  const children = cst.children as Record<string, CstNode[]>
+  const c = cst.children as Record<string, CstNode[]>
 
-  for (const moduleCst of children.moduleDecl ?? []) {
+  for (const moduleCst of c.moduleDecl ?? []) {
     nodes.push(buildModule(moduleCst, filePath))
   }
-  for (const atomCst of children.atomDecl ?? []) {
-    nodes.push(buildAtom(atomCst, filePath))
+  for (const declCst of c.atomOrEdgeDecl ?? []) {
+    const dc = declCst.children
+    if (dc.atomBody) {
+      nodes.push(buildAtomFromDecl(declCst, filePath))
+    } else if (dc.edgeTail) {
+      nodes.push(buildEdge(declCst, filePath))
+    }
   }
 
   return { kind: 'file', filePath, nodes }
@@ -28,15 +33,35 @@ function buildModule(cst: CstNode, filePath: string): ModuleNode {
   }
 }
 
-function buildAtom(cst: CstNode, filePath: string): AtomNode {
-  const children = cst.children as Record<string, IToken[] | CstNode[]>
-  const atToken = (children.At as IToken[])[0]!
-  const path = buildPath(children.atomPath![0] as CstNode)
+function buildAtomFromDecl(cst: CstNode, filePath: string): AtomNode {
+  const c = cst.children as Record<string, IToken[] | CstNode[]>
+  const atTok = (c.At as IToken[])[0]!
+  const path = buildPath((c.atomPath as CstNode[])[0]!)
+  const body = (c.atomBody as CstNode[])[0]!
   return {
     kind: 'atom',
     path: `@${path}`,
-    fields: buildFields(cst, filePath),
-    loc: sourceLocationFromToken(atToken, filePath),
+    fields: buildFields(body, filePath),
+    loc: sourceLocationFromToken(atTok, filePath),
+  }
+}
+
+function buildEdge(cst: CstNode, filePath: string): EdgeNode {
+  const c = cst.children as Record<string, IToken[] | CstNode[]>
+  const fromAtTok = (c.At as IToken[])[0]!
+  const fromPath = buildPath((c.atomPath as CstNode[])[0]!)
+  const tail = (c.edgeTail as CstNode[])[0]!
+  const tc = tail.children as Record<string, IToken[] | CstNode[]>
+  const edgeTypeTok = (tc.Identifier as IToken[])[0]!
+  const toPath = buildPath((tc.atomPath as CstNode[])[0]!)
+  const isGlob = !!tc.Star
+  return {
+    kind: 'edge',
+    from: `@${fromPath}`,
+    edgeType: edgeTypeTok.image,
+    to: `@${toPath}`,
+    isGlob,
+    loc: sourceLocationFromToken(fromAtTok, filePath),
   }
 }
 
