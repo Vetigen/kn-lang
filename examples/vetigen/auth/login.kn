@@ -1,0 +1,28 @@
+# Knowledge Notation v0.1
+# Source: src/core/auth/
+
+@module auth {
+  type: domain,
+  scope: [clinic, customer, supplier, investor],
+  source: "src/core/auth",
+  freshness: "2026-05-14"
+}
+
+@auth/login {
+  type: flow,
+  scope: [clinic, customer, supplier, investor],
+  entry: "POST /auth/login",
+  contract: {
+    in: { phone: E164, recaptcha_token: "string" },
+    out: { jwt: "string", scope: Scope, setup_flags: "SetupFlag[]" },
+    err: ["AUTH.RECAPTCHA_FAILED", "AUTH.OTP_INVALID", "AUTH.SESSION_CAP_EXCEEDED"]
+  },
+  invariants: [
+    { name: "max-active", since: "2025-11-03", reason: "production incident: users had 14 device sessions" }
+  ],
+  source: "src/core/auth/services/auth.service.ts",
+  freshness: "2026-05-14"
+}
+
+@auth/login -creates-> @auth/session
+@auth/login -uses-> @auth/security-layers
