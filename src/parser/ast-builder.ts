@@ -58,22 +58,48 @@ function buildFields(cst: CstNode, filePath: string): Map<string, ValueNode> {
 
 function buildValue(cst: CstNode, filePath: string): ValueNode {
   const c = cst.children
+  if (c.refValue) return buildRef((c.refValue as CstNode[])[0]!, filePath)
+  if (c.listValue) return buildList((c.listValue as CstNode[])[0]!, filePath)
+  if (c.objectValue) return buildObject((c.objectValue as CstNode[])[0]!, filePath)
+  if (c.scalarOrTypeRef) return buildScalarOrTypeRef((c.scalarOrTypeRef as CstNode[])[0]!, filePath)
+  throw new Error('unknown value kind')
+}
+
+function buildRef(cst: CstNode, filePath: string): ValueNode {
+  const atTok = (cst.children.At as IToken[])[0]!
+  const path = buildPath((cst.children.atomPath as CstNode[])[0]!)
+  return {
+    kind: 'ref',
+    target: `@${path}`,
+    loc: sourceLocationFromToken(atTok, filePath),
+  }
+}
+
+function buildList(cst: CstNode, filePath: string): ValueNode {
+  const items = ((cst.children.value as CstNode[]) ?? []).map(v => buildValue(v, filePath))
+  const lbr = (cst.children.LBracket as IToken[])[0]!
+  return { kind: 'list', items, loc: sourceLocationFromToken(lbr, filePath) }
+}
+
+function buildObject(cst: CstNode, filePath: string): ValueNode {
+  const fields = buildFields(cst, filePath)
+  const lbr = (cst.children.LBrace as IToken[])[0]!
+  return { kind: 'object', fields, loc: sourceLocationFromToken(lbr, filePath) }
+}
+
+function buildScalarOrTypeRef(cst: CstNode, filePath: string): ValueNode {
+  const c = cst.children
   if (c.StringLiteral) {
     const tok = (c.StringLiteral as IToken[])[0]!
-    const raw = tok.image
-    return {
-      kind: 'string',
-      value: raw.slice(1, -1),
-      loc: sourceLocationFromToken(tok, filePath),
-    }
+    return { kind: 'string', value: tok.image.slice(1, -1), loc: sourceLocationFromToken(tok, filePath) }
   }
   if (c.NumberLiteral) {
     const tok = (c.NumberLiteral as IToken[])[0]!
-    const m = tok.image.match(/^(\d+(?:\.\d+)?)(.*)$/)
+    const m = tok.image.match(/^(\d+(?:\.\d+)?)(.*)$/)!
     return {
       kind: 'number',
-      value: parseFloat(m![1]!),
-      ...(m![2] ? { unit: m![2] } : {}),
+      value: parseFloat(m[1]!),
+      ...(m[2] ? { unit: m[2] } : {}),
       loc: sourceLocationFromToken(tok, filePath),
     }
   }
@@ -86,8 +112,16 @@ function buildValue(cst: CstNode, filePath: string): ValueNode {
     return { kind: 'boolean', value: false, loc: sourceLocationFromToken(tok, filePath) }
   }
   if (c.Identifier) {
-    const tok = (c.Identifier as IToken[])[0]!
-    return { kind: 'identifier', value: tok.image, loc: sourceLocationFromToken(tok, filePath) }
+    const idents = c.Identifier as IToken[]
+    const nameTok = idents[0]!
+    if (c.LParen) {
+      const args: Array<string | number> = []
+      for (let i = 1; i < idents.length; i++) args.push(idents[i]!.image)
+      for (const s of ((c.StringLiteral as IToken[] | undefined) ?? [])) args.push(s.image.slice(1, -1))
+      for (const n of ((c.NumberLiteral as IToken[] | undefined) ?? [])) args.push(parseFloat(n.image))
+      return { kind: 'typeref', name: nameTok.image, args, loc: sourceLocationFromToken(nameTok, filePath) }
+    }
+    return { kind: 'identifier', value: nameTok.image, loc: sourceLocationFromToken(nameTok, filePath) }
   }
-  throw new Error('unknown value kind')
+  throw new Error('unknown scalar/typeref')
 }

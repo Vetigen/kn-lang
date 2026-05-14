@@ -53,3 +53,51 @@ test('parses boolean and number values', () => {
     expect(ttl.unit).toBe('h')
   }
 })
+
+test('parses list value', () => {
+  const result = parseSource('@x { scope: [clinic, customer] }', 'test.kn')
+  expect(result.errors).toHaveLength(0)
+  const atom = result.file.nodes[0]!
+  if (!isAtom(atom)) throw new Error('expected atom')
+  const v = atom.fields.get('scope')!
+  expect(v.kind).toBe('list')
+  if (v.kind === 'list') {
+    expect(v.items).toHaveLength(2)
+    expect(v.items[0]!.kind).toBe('identifier')
+  }
+})
+
+test('parses object value', () => {
+  const result = parseSource('@x { contract: { in: foo, out: bar } }', 'test.kn')
+  expect(result.errors).toHaveLength(0)
+  const atom = result.file.nodes[0]!
+  if (!isAtom(atom)) throw new Error('expected atom')
+  const v = atom.fields.get('contract')!
+  expect(v.kind).toBe('object')
+  if (v.kind === 'object') {
+    expect(v.fields.size).toBe(2)
+  }
+})
+
+test('parses ref value', () => {
+  const result = parseSource('@x { user: ref(@auth/user) }', 'test.kn')
+  expect(result.errors).toHaveLength(0)
+  const atom = result.file.nodes[0]!
+  if (!isAtom(atom)) throw new Error('expected atom')
+  const v = atom.fields.get('user')!
+  expect(v.kind).toBe('ref')
+  if (v.kind === 'ref') expect(v.target).toBe('@auth/user')
+})
+
+test('parses typeref with args', () => {
+  const result = parseSource('@x { id: fp(user_) }', 'test.kn')
+  expect(result.errors).toHaveLength(0)
+  const atom = result.file.nodes[0]!
+  if (!isAtom(atom)) throw new Error('expected atom')
+  const v = atom.fields.get('id')!
+  expect(v.kind).toBe('typeref')
+  if (v.kind === 'typeref') {
+    expect(v.name).toBe('fp')
+    expect(v.args).toEqual(['user_'])
+  }
+})
