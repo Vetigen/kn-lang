@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bunx tsc --noEmit
+      - run: bun test
+      - run: bun src/cli-knc.ts check --strict --cwd examples/vetigen
+      - run: bun build src/cli-knc.ts --outfile bin/knc --target bun
+      - run: bun build src/cli-kn.ts --outfile bin/kn --target bun
