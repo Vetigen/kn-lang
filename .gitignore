@@ -1,0 +1,9 @@
+node_modules
+bun.lockb
+.kn-dist
+dist
+bin/knc
+bin/kn
+*.log
+.DS_Store
+.env

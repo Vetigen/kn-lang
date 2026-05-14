@@ -1,0 +1,23 @@
+{
+  "name": "kn-lang",
+  "version": "0.1.0",
+  "description": "Knowledge Notation — typed knowledge format for AI assistants",
+  "type": "module",
+  "bin": {
+    "knc": "./bin/knc",
+    "kn":  "./bin/kn"
+  },
+  "files": ["bin", "dist", "README.md", "LICENSE"],
+  "scripts": {
+    "dev:knc": "bun src/cli-knc.ts",
+    "dev:kn":  "bun src/cli-kn.ts",
+    "test":    "bun test",
+    "typecheck": "bunx tsc --noEmit",
+    "build":   "bun build src/cli-knc.ts --outfile bin/knc --target bun && bun build src/cli-kn.ts --outfile bin/kn --target bun",
+    "build:standalone": "bun build --compile --target=bun-darwin-arm64 src/cli-kn.ts --outfile dist/kn-darwin-arm64"
+  },
+  "engines": { "bun": ">=1.1.0" },
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/kn-lang/kn.git" },
+  "keywords": ["knowledge", "documentation", "ai", "llm", "dsl"]
+}
