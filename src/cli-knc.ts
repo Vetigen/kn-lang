@@ -11,11 +11,14 @@ const AUTHORING_TEMPLATE = `# Authoring KN
 ## Atom shape
 
     @<namespace>/<name> {
-      type: flow | entity | convention | module | decision
-      <field>: <value>
-      ref: src/path/to/code.ts
-      freshness: YYYY-MM-DD
+      type: flow | entity | convention | module | decision,
+      <field>: <value>,
+      source: "src/path/to/code.ts",
+      freshness: "YYYY-MM-DD"
     }
+
+> Fields inside \`{ ... }\` are separated by **commas**, not newlines.
+> Use \`source:\` (not \`ref:\`) to point at the code — \`ref\` is a reserved keyword.
 
 ## Edge shape
 
@@ -60,37 +63,37 @@ ref(@path)  E164  fp(prefix_)  timestamptz
 
 const FLOW_EXAMPLE = `# Flow atom example
 @example/login-flow {
-  type: flow
-  entry: "POST /auth/login"
+  type: flow,
+  entry: "POST /auth/login",
   contract: {
-    in: { phone: E164, password: "string" }
-    out: { jwt: "string", scope: Scope }
-    err: [AUTH.INVALID_CREDENTIALS]
-  }
+    in: { phone: E164, password: "string" },
+    out: { jwt: "string", scope: Scope },
+    err: ["AUTH.INVALID_CREDENTIALS"]
+  },
   invariants: [
     { name: "rate-limit", since: "2026-01-01", reason: "brute force protection" }
-  ]
-  ref: "src/auth/login.ts"
+  ],
+  source: "src/auth/login.ts",
   freshness: "2026-05-14"
 }
 `
 
 const ENTITY_EXAMPLE = `# Entity atom example
 @example/user {
-  type: entity
-  identity: fp(user_)
-  storage: postgres
-  ref: "src/users/user.entity.ts"
+  type: entity,
+  identity: fp(user_),
+  storage: postgres,
+  source: "src/users/user.entity.ts",
   freshness: "2026-05-14"
 }
 `
 
 const CONVENTION_EXAMPLE = `# Convention atom example
 @example/cache-invalidation {
-  type: convention
-  invalidation: "bumpScopeVersion(ns) AFTER commit"
-  ttl-entry: 60s
-  ref: "src/cache/conventions.md"
+  type: convention,
+  invalidation: "bumpScopeVersion(ns) AFTER commit",
+  ttl-entry: 60s,
+  source: "src/cache/conventions.md",
   freshness: "2026-05-14"
 }
 `
