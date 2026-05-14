@@ -1,6 +1,6 @@
 import type { IndexedKnowledge } from '../indexer/index.ts'
-import type { AtomNode, AtomPath, ValueNode } from '../ast/types.ts'
-import type { GetOptions, QueryResult, LsEntry, TreeNode, Manifest, ManifestAtomEntry } from './types.ts'
+import type { AtomNode, AtomPath, EdgeNode, ValueNode } from '../ast/types.ts'
+import type { GetOptions, QueryResult, LsEntry, TreeNode, Manifest, ManifestAtomEntry, TraceResult } from './types.ts'
 
 export class QueryExecutor {
   constructor(private readonly idx: IndexedKnowledge) {}
@@ -102,6 +102,76 @@ export class QueryExecutor {
       typeCounts,
       edgeCount,
     }
+  }
+
+  trace(from: AtomPath, to: AtomPath): TraceResult {
+    if (!this.idx.has(from)) return { path: [], edges: [], found: false }
+
+    const parent = new Map<AtomPath, { from: AtomPath; edge: EdgeNode }>()
+    const queue: AtomPath[] = [from]
+    const seen = new Set<AtomPath>([from])
+    let found = false
+
+    while (queue.length && !found) {
+      const cur = queue.shift()!
+      for (const e of this.idx.edgesOut(cur)) {
+        if (seen.has(e.to)) continue
+        seen.add(e.to)
+        parent.set(e.to, { from: cur, edge: e })
+        if (e.to === to) { found = true; break }
+        queue.push(e.to)
+      }
+    }
+
+    if (!found) return { path: [], edges: [], found: false }
+
+    const path: AtomPath[] = [to]
+    const edges: EdgeNode[] = []
+    let cur: AtomPath = to
+    while (parent.has(cur)) {
+      const p = parent.get(cur)!
+      path.unshift(p.from)
+      edges.unshift(p.edge)
+      cur = p.from
+    }
+    return { path, edges, found: true }
+  }
+
+  why(query: string): { since?: string; reason?: string; pr?: string } | null {
+    const [path, field] = query.split('#')
+    if (!path || !field) return null
+    const atom = this.idx.get(path)
+    if (!atom) return null
+    const inv = atom.fields.get('invariants')
+    if (!inv || inv.kind !== 'list') return null
+    for (const item of inv.items) {
+      if (item.kind !== 'object') continue
+      const name = item.fields.get('name')
+      if (name && (name.kind === 'string' || name.kind === 'identifier') && name.value === field) {
+        const since = item.fields.get('since')
+        const reason = item.fields.get('reason')
+        const pr = item.fields.get('pr')
+        return {
+          ...(since?.kind === 'string' ? { since: since.value } : {}),
+          ...(reason?.kind === 'string' ? { reason: reason.value } : {}),
+          ...(pr?.kind === 'string' ? { pr: pr.value } : {}),
+        }
+      }
+    }
+    return null
+  }
+
+  diff(sinceIso: string): AtomNode[] {
+    const t = Date.parse(sinceIso)
+    if (Number.isNaN(t)) return []
+    return Array.from(this.idx.allAtoms()).filter(a => {
+      const f = a.fields.get('freshness')
+      if (!f) return false
+      const s = f.kind === 'string' || f.kind === 'identifier' ? (f.value as string).split(/\s+/)[0] : null
+      if (!s) return false
+      const at = Date.parse(s)
+      return !Number.isNaN(at) && at >= t
+    })
   }
 }
 
